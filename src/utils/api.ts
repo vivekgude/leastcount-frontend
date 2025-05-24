@@ -1,6 +1,10 @@
 import axios, { AxiosError } from 'axios';
 import { ApiError } from '@/types';
 
+interface ErrorResponse {
+  message: string;
+}
+
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
   headers: {
@@ -16,7 +20,7 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-export const handleApiError = (error: AxiosError): ApiError => {
+export const handleApiError = (error: AxiosError<ErrorResponse>): ApiError => {
   if (error.response) {
     return {
       message: error.response.data?.message || 'An error occurred',
