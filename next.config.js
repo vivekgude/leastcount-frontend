@@ -4,15 +4,11 @@ const nextConfig = {
   async rewrites() {
     return [
       {
-        source: '/api/signup',
-        destination: 'http://140.245.228.15:8080/api/auth/register', // external API
-      },
-      {
-        source: '/api/auth/login',
-        destination: 'http://140.245.228.15:8080/api/auth/login', // external API
+        source: '/api/:path*',
+        destination: 'http://140.245.228.15:8080/api/:path*',
       },
     ];
   },
 };
 
-module.exports = nextConfig; 
+module.exports = nextConfig;

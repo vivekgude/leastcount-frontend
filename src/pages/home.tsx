@@ -19,8 +19,7 @@ export default function HomePage() {
   };
 
   const handleJoinGame = () => {
-    // TODO: Implement join game functionality
-    console.log('Join game clicked');
+    router.push('/join-game');
   };
 
   return (

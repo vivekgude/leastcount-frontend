@@ -31,7 +31,7 @@ export default function SignupPage() {
         }
 
         try {
-            const res = await fetch('http://140.245.228.15:8080/api/auth/register', {
+            const res = await fetch('/api/auth/register', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
