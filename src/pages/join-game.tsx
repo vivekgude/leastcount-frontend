@@ -1,6 +1,7 @@
 import Head from 'next/head';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
+import { websocketService } from '@/services/websocket';
 
 export default function JoinGamePage() {
   const router = useRouter();
@@ -45,9 +46,15 @@ export default function JoinGamePage() {
       }
 
       const data = await response.json();
-      // TODO: Handle successful join - maybe redirect to game page
       console.log('Successfully joined game:', data);
-      
+
+      // Establish WebSocket connection
+      if (userId) {
+        websocketService.connect(gameId.trim());
+        // TODO: Redirect to game page
+        // router.push(`/game/${gameId.trim()}`);
+      }
+
     } catch (err) {
       setError('Failed to join game. Please try again.');
       console.error('Error joining game:', err);
