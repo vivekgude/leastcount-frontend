@@ -1,5 +1,6 @@
-import { store } from '@/store/store';
-import { setCurrentPlayer, updatePlayerHand, updatePlayerScore } from '@/store/features/gameSlice';
+// import { store } from '@/store/store';
+// import { setCurrentPlayer, updatePlayerHand } from '@/store/features/gameSlice';
+import { Message } from '@/model/message';
 
 class WebSocketService {
   private socket: WebSocket | null = null;
@@ -63,23 +64,23 @@ class WebSocketService {
     }
   }
 
-  private handleMessage(data: any) {
-    switch (data.type) {
+  private handleMessage(message: Message) {
+    switch (message.type) {
       case 'PLAYER_TURN':
-        store.dispatch(setCurrentPlayer(data.playerId));
+        // store.dispatch(setCurrentPlayer(message.playerId));
         break;
       case 'UPDATE_HAND':
-        store.dispatch(updatePlayerHand({
-          playerId: data.playerId,
-          cards: data.cards
-        }));
+        // store.dispatch(updatePlayerHand({
+        //   playerId: message.playerId,
+        //   cards: message.cards
+        // }));
         break;
       default:
-        console.log('Unknown message type:', data.type);
+        console.log('Unknown message type:', message.type);
     }
   }
 
-  sendMessage(message: any) {
+  sendMessage(message: Message) {
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
       this.socket.send(JSON.stringify(message));
     } else {
