@@ -1,6 +1,7 @@
 import Head from 'next/head';
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { websocketService } from '@/services/websocket';
 
 export default function HomePage() {
   const router = useRouter();
@@ -13,9 +14,36 @@ export default function HomePage() {
     }
   }, [router]);
 
-  const handleCreateGame = () => {
-    // TODO: Implement create game functionality
-    console.log('Create game clicked');
+  const handleCreateGame = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        router.push('/login');
+        return;
+      }
+
+      const response = await fetch('/api/game/createGame', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create game');
+      }
+
+      const data = await response.json();
+      console.log('Game created:', data);
+
+      // Redirect to game page
+      if (data.data?.gameId) {
+        router.push(`/game?gameId=${data.data.gameId}`);
+      }
+
+    } catch (error) {
+      console.error('Error creating game:', error);
+    }
   };
 
   const handleJoinGame = () => {

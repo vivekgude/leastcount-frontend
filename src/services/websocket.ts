@@ -7,9 +7,11 @@ class WebSocketService {
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private reconnectTimeout = 3000;
+  private onConnectCallback: (() => void) | null = null;
 
-  connect(gameId: string) {
+  connect(gameId: string, onConnect?: () => void) {
     const wsUrl = `ws://140.245.228.15:8080/ws?gameId=${gameId}`;
+    this.onConnectCallback = onConnect || null;
 
     const token = localStorage.getItem('token');
     try {
@@ -20,6 +22,9 @@ class WebSocketService {
       this.socket.onopen = () => {
         console.log('WebSocket connected');
         this.reconnectAttempts = 0;
+        if (this.onConnectCallback) {
+          this.onConnectCallback();
+        }
       };
 
       this.socket.onmessage = (event) => {
