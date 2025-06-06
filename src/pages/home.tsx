@@ -1,7 +1,6 @@
 import Head from 'next/head';
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { websocketService } from '@/services/websocket';
 
 export default function HomePage() {
   const router = useRouter();
