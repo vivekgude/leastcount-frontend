@@ -1,7 +1,6 @@
 import Head from 'next/head';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
-import { websocketService } from '@/services/websocket';
 
 export default function JoinGamePage() {
   const router = useRouter();
@@ -25,20 +24,11 @@ export default function JoinGamePage() {
         return;
       }
 
-      const userId = localStorage.getItem('userId');
-      const username = localStorage.getItem('username');
-
-      const response = await fetch('/api/game/joinGame', {
+      const response = await fetch(`/api/game/joinGame/${gameId.trim()}`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          gameId: gameId.trim(),
-          userId: userId,
-          username: username
-        })
+        }
       });
 
       if (!response.ok) {
@@ -48,12 +38,8 @@ export default function JoinGamePage() {
       const data = await response.json();
       console.log('Successfully joined game:', data);
 
-      // Establish WebSocket connection
-      if (userId) {
-        websocketService.connect(gameId.trim());
-        // TODO: Redirect to game page
-        // router.push(`/game/${gameId.trim()}`);
-      }
+      // Redirect to game page
+      router.push(`/game?gameId=${gameId.trim()}`);
 
     } catch (err) {
       setError('Failed to join game. Please try again.');
