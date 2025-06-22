@@ -1,6 +1,7 @@
 import Head from 'next/head';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
+import { API_ROUTES } from '@/constants';
 
 export default function JoinGamePage() {
   const router = useRouter();
@@ -24,7 +25,7 @@ export default function JoinGamePage() {
         return;
       }
 
-      const response = await fetch(`/api/game/joinGame/${gameId.trim()}`, {
+      const response = await fetch(`${API_ROUTES.GAME.JOIN}/${gameId.trim()}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`

@@ -3,6 +3,7 @@ import AuthForm from '../components/authform';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
+import { API_ROUTES } from '@/constants';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,7 +18,7 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch(API_ROUTES.AUTH.LOGIN, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,11 +1,15 @@
 export const API_ROUTES = {
   AUTH: {
-    LOGIN: '/auth/login',
-    SIGNUP: '/auth/signup',
-    LOGOUT: '/auth/logout',
+    LOGIN: '/api/auth/login',
+    SIGNUP: '/api/auth/register',
+    LOGOUT: '/api/auth/logout',
+  },
+  GAME: {
+    CREATE: '/api/game/createGame',
+    JOIN: '/api/game/joinGame',
   },
   USER: {
-    PROFILE: '/user/profile',
+    PROFILE: '/api/user/profile',
   },
 } as const;
 

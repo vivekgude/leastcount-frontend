@@ -1,6 +1,7 @@
 import Head from 'next/head';
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { API_ROUTES } from '@/constants';
 
 export default function HomePage() {
   const router = useRouter();
@@ -21,7 +22,7 @@ export default function HomePage() {
         return;
       }
 
-      const response = await fetch('/api/game/createGame', {
+      const response = await fetch(API_ROUTES.GAME.CREATE, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`

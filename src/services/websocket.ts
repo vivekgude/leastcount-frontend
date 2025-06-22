@@ -1,6 +1,7 @@
 // import { store } from '@/store/store';
 // import { setCurrentPlayer, updatePlayerHand } from '@/store/features/gameSlice';
 import { Message } from '@/model/message';
+import { GameDetails, WebSocketMessage } from '@/types';
 
 class WebSocketService {
   private socket: WebSocket | null = null;
@@ -8,6 +9,7 @@ class WebSocketService {
   private maxReconnectAttempts = 5;
   private reconnectTimeout = 3000;
   private onConnectCallback: (() => void) | null = null;
+  private gameDetailsHandler: ((details: GameDetails) => void) | null = null;
 
   connect(gameId: string, onConnect?: () => void) {
     const wsUrl = `ws://140.245.228.15:8080/ws?gameId=${gameId}`;
@@ -69,7 +71,21 @@ class WebSocketService {
     }
   }
 
-  private handleMessage(message: Message) {
+  setGameDetailsHandler(handler: (details: GameDetails) => void) {
+    this.gameDetailsHandler = handler;
+  }
+
+  private handleMessage(message: WebSocketMessage) {
+    // Handle game details response
+    if (message.gameState !== undefined && message.players) {
+      console.log('Received game details:', message);
+      if (this.gameDetailsHandler) {
+        this.gameDetailsHandler(message as unknown as GameDetails);
+      }
+      return;
+    }
+
+    // Handle other message types
     switch (message.type) {
       case 'PLAYER_TURN':
         // store.dispatch(setCurrentPlayer(message.playerId));

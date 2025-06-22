@@ -3,6 +3,7 @@ import AuthForm from '../components/authform';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
+import { API_ROUTES } from '@/constants';
 
 export default function SignupPage() {
     const router = useRouter();
@@ -31,7 +32,7 @@ export default function SignupPage() {
         }
 
         try {
-            const res = await fetch('/api/auth/register', {
+            const res = await fetch(API_ROUTES.AUTH.SIGNUP, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

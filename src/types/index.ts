@@ -22,4 +22,20 @@ export interface FormField {
   type: 'text' | 'email' | 'password';
   required: boolean;
   placeholder?: string;
-} 
+}
+
+export interface Player {
+  id: number;
+  name: string;
+}
+
+export interface GameDetails {
+  gameState: number;
+  players: Player[];
+  currentPlayer: number;
+  moveTime: number;
+  receiver: number;
+}
+
+// Generic WebSocket message that can contain any properties
+export type WebSocketMessage = Record<string, string | number | boolean | object | Array<unknown>>; 
