@@ -13,16 +13,18 @@ class WebSocketService {
 
   connect(gameId: string, onConnect?: () => void) {
     const wsUrl = `wss://leastcount.duckdns.org/ws?gameId=${gameId}`;
+    console.log('Attempting to connect to:', wsUrl);
     this.onConnectCallback = onConnect || null;
 
     const token = localStorage.getItem('token');
+    console.log('Token:', token);
     try {
       // Use subprotocols for authentication
       // The server must support these protocols in its handshake
       this.socket = new WebSocket(wsUrl, [token || '']);
 
       this.socket.onopen = () => {
-        console.log('WebSocket connected');
+        console.log('WebSocket connected successfully');
         this.reconnectAttempts = 0;
         if (this.onConnectCallback) {
           this.onConnectCallback();
@@ -32,19 +34,27 @@ class WebSocketService {
       this.socket.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
+          console.log('WebSocket message received:', data);
           this.handleMessage(data);
         } catch (error) {
           console.error('Error parsing WebSocket message:', error);
         }
       };
 
-      this.socket.onclose = () => {
-        console.log('WebSocket disconnected');
+      this.socket.onclose = (event) => {
+        console.log('WebSocket disconnected', {
+          code: event.code,
+          reason: event.reason,
+          wasClean: event.wasClean,
+          url: wsUrl
+        });
         this.handleReconnect(gameId);
       };
 
       this.socket.onerror = (error) => {
         console.error('WebSocket error:', error);
+        console.error('WebSocket readyState:', this.socket?.readyState);
+        console.error('WebSocket URL:', wsUrl);
       };
     } catch (error) {
       console.error('Error creating WebSocket connection:', error);
