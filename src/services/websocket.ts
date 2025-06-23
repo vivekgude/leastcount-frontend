@@ -40,7 +40,7 @@ class WebSocketService {
 
       this.socket.onclose = () => {
         console.log('WebSocket disconnected');
-        this.handleReconnect();
+        this.handleReconnect(gameId);
       };
 
       this.socket.onerror = (error) => {
@@ -51,12 +51,11 @@ class WebSocketService {
     }
   }
 
-  private handleReconnect() {
+  private handleReconnect(gameId: string) {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
       console.log(`Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
       setTimeout(() => {
-        const gameId = '1001'; // Hardcoded for now
         this.connect(gameId);
       }, this.reconnectTimeout);
     } else {
