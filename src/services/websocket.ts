@@ -12,7 +12,7 @@ class WebSocketService {
   private gameDetailsHandler: ((details: GameDetails) => void) | null = null;
 
   connect(gameId: string, onConnect?: () => void) {
-    const wsUrl = `ws://140.245.228.15:8080/ws?gameId=${gameId}`;
+    const wsUrl = `wss://leastcount.duckdns.org/ws?gameId=${gameId}`;
     this.onConnectCallback = onConnect || null;
 
     const token = localStorage.getItem('token');

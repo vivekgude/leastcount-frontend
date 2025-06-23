@@ -5,7 +5,7 @@ const nextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: 'http://140.245.228.15:8080/api/:path*',
+        destination: 'https://leastcount.duckdns.org/api/:path*',
       },
     ];
   },
