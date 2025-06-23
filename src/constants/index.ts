@@ -7,6 +7,7 @@ export const API_ROUTES = {
   GAME: {
     CREATE: '/api/game/createGame',
     JOIN: '/api/game/joinGame',
+    EXIT_GAME: '/api/game/exitGame',
   },
   USER: {
     PROFILE: '/api/user/profile',

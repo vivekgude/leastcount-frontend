@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { websocketService } from '@/services/websocket';
 import { GameDetails } from '@/types';
+import { API_ROUTES } from '@/constants';
 
 export default function GamePage() {
   const router = useRouter();
@@ -10,6 +11,7 @@ export default function GamePage() {
   const [error, setError] = useState('');
   const [gameDetails, setGameDetails] = useState<GameDetails | null>(null);
   const [currentUser, setCurrentUser] = useState('');
+  const [isExiting, setIsExiting] = useState(false);
 
   useEffect(() => {
     // Check if user is logged in
@@ -57,6 +59,50 @@ export default function GamePage() {
     };
   }, [gameId, router]);
 
+  const handleExitGame = async () => {
+    if (!gameId) {
+      setError('Game ID not found');
+      return;
+    }
+
+    setIsExiting(true);
+    setError('');
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        router.push('/login');
+        return;
+      }
+
+      const response = await fetch(`${API_ROUTES.GAME.EXIT_GAME}/${gameId}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to exit game');
+      }
+
+      const data = await response.json();
+      console.log('Successfully exited game:', data);
+
+      // Disconnect from WebSocket
+      websocketService.disconnect();
+
+      // Redirect to home page
+      router.push('/home');
+
+    } catch (err) {
+      setError('Failed to exit game. Please try again.');
+      console.error('Error exiting game:', err);
+    } finally {
+      setIsExiting(false);
+    }
+  };
+
   // Filter out current user from the players list
   const otherPlayers = gameDetails?.players.filter(player => player.name !== currentUser) || [];
 
@@ -72,7 +118,16 @@ export default function GamePage() {
       <div className="min-h-screen bg-gray-100 p-4">
         <div className="max-w-7xl mx-auto">
           <div className="bg-white rounded-lg shadow-md p-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Game Room: {gameId}</h1>
+            <div className="flex justify-between items-center mb-4">
+              <h1 className="text-2xl font-bold text-gray-900">Game Room: {gameId}</h1>
+              <button
+                onClick={handleExitGame}
+                disabled={isExiting}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isExiting ? 'Exiting...' : 'Exit Game'}
+              </button>
+            </div>
             
             {error && (
               <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">

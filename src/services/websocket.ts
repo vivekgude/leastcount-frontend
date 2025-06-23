@@ -10,11 +10,13 @@ class WebSocketService {
   private reconnectTimeout = 3000;
   private onConnectCallback: (() => void) | null = null;
   private gameDetailsHandler: ((details: GameDetails) => void) | null = null;
+  private isIntentionalDisconnect = false;
 
   connect(gameId: string, onConnect?: () => void) {
     const wsUrl = `wss://leastcount.duckdns.org/ws?gameId=${gameId}`;
     console.log('Attempting to connect to:', wsUrl);
     this.onConnectCallback = onConnect || null;
+    this.isIntentionalDisconnect = false;
 
     const token = localStorage.getItem('token');
     console.log('Token:', token);
@@ -48,7 +50,13 @@ class WebSocketService {
           wasClean: event.wasClean,
           url: wsUrl
         });
-        this.handleReconnect(gameId);
+        
+        // Only attempt reconnection if it wasn't an intentional disconnect
+        if (!this.isIntentionalDisconnect) {
+          this.handleReconnect(gameId);
+        } else {
+          console.log('Intentional disconnect - not attempting reconnection');
+        }
       };
 
       this.socket.onerror = (error) => {
@@ -74,10 +82,13 @@ class WebSocketService {
   }
 
   disconnect() {
+    this.isIntentionalDisconnect = true;
     if (this.socket) {
       this.socket.close();
       this.socket = null;
     }
+    // Reset reconnection attempts
+    this.reconnectAttempts = 0;
   }
 
   setGameDetailsHandler(handler: (details: GameDetails) => void) {
