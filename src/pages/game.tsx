@@ -103,9 +103,6 @@ export default function GamePage() {
     }
   };
 
-  // Filter out current user from the players list
-  const otherPlayers = gameDetails?.players.filter(player => player.name !== currentUser) || [];
-
   if (!gameId) {
     return <div>Loading...</div>;
   }
@@ -139,25 +136,16 @@ export default function GamePage() {
             <div className="mb-6">
               <h2 className="text-lg font-semibold text-gray-800 mb-3">Players in Game</h2>
               
-              {/* Current User */}
-              <div className="mb-4">
-                <div className="flex items-center space-x-3">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span className="font-medium text-gray-900">{currentUser}</span>
-                  <span className="text-sm text-gray-500">(You)</span>
-                  {gameDetails?.host.name === currentUser && (
-                    <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full font-medium">Host</span>
-                  )}
-                </div>
-              </div>
-
-              {/* Other Players */}
-              {otherPlayers.length > 0 ? (
+              {/* All Players */}
+              {gameDetails?.players && gameDetails.players.length > 0 ? (
                 <div className="space-y-2">
-                  {otherPlayers.map((player, index) => (
+                  {gameDetails.players.map((player, index) => (
                     <div key={index} className="flex items-center space-x-3">
-                      <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                      <div className={`w-3 h-3 rounded-full ${player.name === currentUser ? 'bg-green-500' : 'bg-blue-500'}`}></div>
                       <span className="font-medium text-gray-900">{player.name}</span>
+                      {player.name === currentUser && (
+                        <span className="text-sm text-gray-500">(You)</span>
+                      )}
                       {gameDetails?.host.name === player.name && (
                         <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full font-medium">Host</span>
                       )}
@@ -165,7 +153,7 @@ export default function GamePage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-500 text-sm">No other players have joined yet...</p>
+                <p className="text-gray-500 text-sm">No players have joined yet...</p>
               )}
             </div>
 
