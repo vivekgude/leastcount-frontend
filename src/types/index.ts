@@ -31,6 +31,7 @@ export interface Player {
 
 export interface GameDetails {
   gameState: number;
+  host: Player;
   players: Player[];
   currentPlayer: number;
   moveTime: number;

@@ -145,6 +145,9 @@ export default function GamePage() {
                   <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                   <span className="font-medium text-gray-900">{currentUser}</span>
                   <span className="text-sm text-gray-500">(You)</span>
+                  {gameDetails?.host.name === currentUser && (
+                    <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full font-medium">Host</span>
+                  )}
                 </div>
               </div>
 
@@ -155,6 +158,9 @@ export default function GamePage() {
                     <div key={index} className="flex items-center space-x-3">
                       <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
                       <span className="font-medium text-gray-900">{player.name}</span>
+                      {gameDetails?.host.name === player.name && (
+                        <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full font-medium">Host</span>
+                      )}
                     </div>
                   ))}
                 </div>
