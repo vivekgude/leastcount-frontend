@@ -14,10 +14,10 @@ const PlayerCards: React.FC<PlayerCardsProps> = ({ cards, gameState }) => {
     // Convert value to card name
     let cardValue = '';
     switch (value) {
+      case '1': cardValue = 'A'; break;
       case '11': cardValue = 'J'; break;
       case '12': cardValue = 'Q'; break;
       case '13': cardValue = 'K'; break;
-      case '14': cardValue = 'A'; break;
       default: cardValue = value;
     }
     
