@@ -1,16 +1,24 @@
 import Head from 'next/head';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { API_ROUTES } from '@/constants';
 
 export default function HomePage() {
   const router = useRouter();
+  const [username, setUsername] = useState('');
 
   useEffect(() => {
     // Check if user is logged in
     const token = localStorage.getItem('token');
     if (!token) {
       router.push('/login');
+      return;
+    }
+
+    // Get username from localStorage
+    const storedUsername = localStorage.getItem('username');
+    if (storedUsername) {
+      setUsername(storedUsername);
     }
   }, [router]);
 
@@ -59,6 +67,9 @@ export default function HomePage() {
         <div className="max-w-md w-full space-y-8">
           <div className="text-center">
             <h1 className="text-4xl font-bold text-gray-900 mb-2">Welcome to Least Count</h1>
+            {username && (
+              <p className="text-xl text-blue-600 font-semibold mb-2">Hello, {username}!</p>
+            )}
             <p className="text-gray-600">Choose an option to start playing</p>
           </div>
           
