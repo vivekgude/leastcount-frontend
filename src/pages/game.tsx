@@ -2,8 +2,9 @@ import Head from 'next/head';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { websocketService } from '@/services/websocket';
-import { GameDetails } from '@/types';
+import { GameDetails, GameStartResponse, CardsResponse } from '@/types';
 import { API_ROUTES } from '@/constants';
+import PlayerCards from '../components/playercards';
 
 export default function GamePage() {
   const router = useRouter();
@@ -12,6 +13,8 @@ export default function GamePage() {
   const [gameDetails, setGameDetails] = useState<GameDetails | null>(null);
   const [currentUser, setCurrentUser] = useState('');
   const [isExiting, setIsExiting] = useState(false);
+  const [playerCards, setPlayerCards] = useState<string[]>([]);
+  const [timeRemaining, setTimeRemaining] = useState<number>(0);
 
   useEffect(() => {
     // Check if user is logged in
@@ -45,8 +48,42 @@ export default function GamePage() {
         setGameDetails(details);
       };
 
-      // Add the handler to the websocket service
+      // Set up message handler for game start response
+      const handleGameStart = (response: GameStartResponse) => {
+        setGameDetails(prev => prev ? { ...prev, gameState: response.gameState, currentPlayer: response.currentPlayer, moveTime: response.moveTime } : null);
+        
+        // Start move timer if it's current user's turn
+        if (typeof window !== 'undefined' && response.currentPlayer.toString() === localStorage.getItem('userId')) {
+          const endTime = response.moveTime;
+          const now = Date.now();
+          const remaining = Math.max(0, endTime - now);
+          setTimeRemaining(remaining);
+          
+          // Start countdown timer
+          const timer = setInterval(() => {
+            const now = Date.now();
+            const remaining = Math.max(0, endTime - now);
+            setTimeRemaining(remaining);
+            
+            if (remaining <= 0) {
+              clearInterval(timer);
+            }
+          }, 1000);
+          
+          // Cleanup timer on unmount
+          return () => clearInterval(timer);
+        }
+      };
+
+      // Set up message handler for cards response
+      const handleCards = (response: CardsResponse) => {
+        setPlayerCards(response.cards);
+      };
+
+      // Add the handlers to the websocket service
       websocketService.setGameDetailsHandler(handleGameDetails);
+      websocketService.setGameStartHandler(handleGameStart);
+      websocketService.setCardsHandler(handleCards);
 
     } catch (err) {
       setError('Failed to connect to game. Please try again.');
@@ -101,6 +138,23 @@ export default function GamePage() {
     } finally {
       setIsExiting(false);
     }
+  };
+
+  const handleStartGame = () => {
+    if (!gameDetails) return;
+    
+    websocketService.sendMessage({
+      type: 'startgamereq',
+      data: ''
+    });
+  };
+
+  // Format time remaining
+  const formatTime = (ms: number) => {
+    const seconds = Math.ceil(ms / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
   if (!gameId) {
@@ -162,7 +216,31 @@ export default function GamePage() {
               <p className="text-gray-600">
                 {gameDetails ? `Players joined: ${gameDetails.players.length}` : 'Waiting for game to start...'}
               </p>
+              
+              {/* Move Timer */}
+              {gameDetails?.gameState === 20 && gameDetails.currentPlayer.toString() === (typeof window !== 'undefined' ? localStorage.getItem('userId') : null) && timeRemaining > 0 && (
+                <div className="mt-2">
+                  <p className="text-sm font-medium text-red-600">
+                    Your turn! Time remaining: {formatTime(timeRemaining)}
+                  </p>
+                </div>
+              )}
+              
+              {/* Start Game Button - Only show for host when game is waiting */}
+              {gameDetails?.gameState === 10 && gameDetails.host.name === currentUser && (
+                <div className="mt-4">
+                  <button
+                    onClick={handleStartGame}
+                    className="px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors font-medium"
+                  >
+                    Start Game
+                  </button>
+                </div>
+              )}
             </div>
+
+            {/* Player Cards */}
+            <PlayerCards cards={playerCards} gameState={gameDetails?.gameState || 0} />
           </div>
         </div>
       </div>

@@ -38,5 +38,20 @@ export interface GameDetails {
   receiver: number;
 }
 
+export interface GameStartResponse {
+  gameState: number;
+  currentPlayer: number;
+  moveTime: number;
+  type: string;
+  receiver: number;
+}
+
+export interface CardsResponse {
+  gameId: string;
+  cards: string[];
+  type: string;
+  receiver: number;
+}
+
 // Generic WebSocket message that can contain any properties
 export type WebSocketMessage = Record<string, string | number | boolean | object | Array<unknown>>; 

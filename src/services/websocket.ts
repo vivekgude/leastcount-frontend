@@ -1,7 +1,7 @@
 // import { store } from '@/store/store';
 // import { setCurrentPlayer, updatePlayerHand } from '@/store/features/gameSlice';
 import { Message } from '@/model/message';
-import { GameDetails, WebSocketMessage } from '@/types';
+import { GameDetails, WebSocketMessage, GameStartResponse, CardsResponse } from '@/types';
 
 class WebSocketService {
   private socket: WebSocket | null = null;
@@ -10,6 +10,8 @@ class WebSocketService {
   private reconnectTimeout = 3000;
   private onConnectCallback: (() => void) | null = null;
   private gameDetailsHandler: ((details: GameDetails) => void) | null = null;
+  private gameStartHandler: ((response: GameStartResponse) => void) | null = null;
+  private cardsHandler: ((response: CardsResponse) => void) | null = null;
   private isIntentionalDisconnect = false;
 
   connect(gameId: string, onConnect?: () => void) {
@@ -95,12 +97,38 @@ class WebSocketService {
     this.gameDetailsHandler = handler;
   }
 
+  setGameStartHandler(handler: (response: GameStartResponse) => void) {
+    this.gameStartHandler = handler;
+  }
+
+  setCardsHandler(handler: (response: CardsResponse) => void) {
+    this.cardsHandler = handler;
+  }
+
   private handleMessage(message: WebSocketMessage) {
     // Handle game details response
     if (message.gameState !== undefined && message.players) {
       console.log('Received game details:', message);
       if (this.gameDetailsHandler) {
         this.gameDetailsHandler(message as unknown as GameDetails);
+      }
+      return;
+    }
+
+    // Handle game start response
+    if (message.type === 'gamestartres') {
+      console.log('Received game start response:', message);
+      if (this.gameStartHandler) {
+        this.gameStartHandler(message as unknown as GameStartResponse);
+      }
+      return;
+    }
+
+    // Handle cards response
+    if (message.type === 'cardsres') {
+      console.log('Received cards response:', message);
+      if (this.cardsHandler) {
+        this.cardsHandler(message as unknown as CardsResponse);
       }
       return;
     }
