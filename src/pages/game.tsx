@@ -14,6 +14,7 @@ export default function GamePage() {
   const [currentUser, setCurrentUser] = useState('');
   const [isExiting, setIsExiting] = useState(false);
   const [playerCards, setPlayerCards] = useState<string[]>([]);
+  const [selectedCards, setSelectedCards] = useState<string[]>([]);
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
 
   useEffect(() => {
@@ -240,7 +241,14 @@ export default function GamePage() {
             </div>
 
             {/* Player Cards */}
-            <PlayerCards cards={playerCards} gameState={gameDetails?.gameState || 0} />
+            <PlayerCards 
+              cards={playerCards} 
+              gameState={gameDetails?.gameState || 0} 
+              onCardSelection={setSelectedCards}
+              showPlayButton={gameDetails?.gameState === 20 && 
+                             gameDetails.currentPlayer.toString() === (typeof window !== 'undefined' ? localStorage.getItem('userId') : null)}
+              selectedCardsCount={selectedCards.length}
+            />
           </div>
         </div>
       </div>
