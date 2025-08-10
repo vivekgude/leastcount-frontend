@@ -2,20 +2,37 @@ import Head from 'next/head';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { websocketService } from '@/services/websocket';
-import { GameDetails, GameStartResponse, CardsResponse } from '@/types';
+// types are provided by the game socket hook
 import { API_ROUTES } from '@/constants';
 import PlayerCards from '../components/playercards';
+import { useGameSocket } from '@/hooks/useGameSocket';
+import { OpenPile } from '@/components/OpenPile';
+import { TimerBadge } from '@/components/TimerBadge';
+import { Scoreboard } from '@/components/Scoreboard';
+import { RoundSummary } from '@/components/RoundSummary';
+import { GameEndBanner } from '@/components/GameEndBanner';
+import { ErrorToast } from '@/components/ErrorToast';
 
 export default function GamePage() {
   const router = useRouter();
   const { gameId } = router.query;
   const [error, setError] = useState('');
-  const [gameDetails, setGameDetails] = useState<GameDetails | null>(null);
+  // game details provided by socket hook
   const [currentUser, setCurrentUser] = useState('');
   const [isExiting, setIsExiting] = useState(false);
-  const [playerCards, setPlayerCards] = useState<string[]>([]);
+  const {
+    gameDetails,
+    playerCards,
+    timeRemaining,
+    openPile,
+    deckCount,
+    scores,
+    eliminated,
+    roundSummary,
+    gameEnd,
+    errorToast,
+  } = useGameSocket(gameId as string | undefined);
   const [selectedCards, setSelectedCards] = useState<string[]>([]);
-  const [timeRemaining, setTimeRemaining] = useState<number>(0);
 
   useEffect(() => {
     // Check if user is logged in
@@ -34,67 +51,8 @@ export default function GamePage() {
       return;
     }
 
-    // Connect to WebSocket
-    try {
-      websocketService.connect(gameId as string, () => {
-        // Send game details request after connection is confirmed
-        websocketService.sendMessage({
-          type: 'gamedetailsreq',
-          data: ''
-        });
-      });
-
-      // Set up message handler for game details
-      const handleGameDetails = (details: GameDetails) => {
-        setGameDetails(details);
-      };
-
-      // Set up message handler for game start response
-      const handleGameStart = (response: GameStartResponse) => {
-        setGameDetails(prev => prev ? { ...prev, gameState: response.gameState, currentPlayer: response.currentPlayer, moveTime: response.moveTime } : null);
-        
-        // Start move timer if it's current user's turn
-        if (typeof window !== 'undefined' && response.currentPlayer.toString() === localStorage.getItem('userId')) {
-          const endTime = response.moveTime;
-          const now = Date.now();
-          const remaining = Math.max(0, endTime - now);
-          setTimeRemaining(remaining);
-          
-          // Start countdown timer
-          const timer = setInterval(() => {
-            const now = Date.now();
-            const remaining = Math.max(0, endTime - now);
-            setTimeRemaining(remaining);
-            
-            if (remaining <= 0) {
-              clearInterval(timer);
-            }
-          }, 1000);
-          
-          // Cleanup timer on unmount
-          return () => clearInterval(timer);
-        }
-      };
-
-      // Set up message handler for cards response
-      const handleCards = (response: CardsResponse) => {
-        setPlayerCards(response.cards);
-      };
-
-      // Add the handlers to the websocket service
-      websocketService.setGameDetailsHandler(handleGameDetails);
-      websocketService.setGameStartHandler(handleGameStart);
-      websocketService.setCardsHandler(handleCards);
-
-    } catch (err) {
-      setError('Failed to connect to game. Please try again.');
-      console.error('WebSocket connection error:', err);
-    }
-
-    // Cleanup WebSocket connection when component unmounts
-    return () => {
-      websocketService.disconnect();
-    };
+    // Connection managed by useGameSocket hook
+    return () => {};
   }, [gameId, router]);
 
   const handleExitGame = async () => {
@@ -150,12 +108,24 @@ export default function GamePage() {
     });
   };
 
-  // Format time remaining
-  const formatTime = (ms: number) => {
-    const seconds = Math.ceil(ms / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  // TimerBadge handles formatting
+
+  const canAct = gameDetails?.gameState === 20 && gameDetails.currentPlayer.toString() === (typeof window !== 'undefined' ? localStorage.getItem('userId') : null);
+
+  const handleDrop = () => {
+    if (!canAct || selectedCards.length === 0) return;
+    websocketService.drop(selectedCards);
+    setSelectedCards([]);
+  };
+
+  const handlePickOpen = (card: string) => {
+    if (!canAct) return;
+    websocketService.pickOpen(card);
+  };
+
+  const handlePickClosed = () => {
+    if (!canAct) return;
+    websocketService.pickClosed();
   };
 
   if (!gameId) {
@@ -221,8 +191,8 @@ export default function GamePage() {
               {/* Move Timer */}
               {gameDetails?.gameState === 20 && gameDetails.currentPlayer.toString() === (typeof window !== 'undefined' ? localStorage.getItem('userId') : null) && timeRemaining > 0 && (
                 <div className="mt-2">
-                  <p className="text-sm font-medium text-red-600">
-                    Your turn! Time remaining: {formatTime(timeRemaining)}
+                  <p className="text-sm font-medium text-red-600 flex items-center gap-2">
+                    Your turn! Time remaining: <TimerBadge ms={timeRemaining} />
                   </p>
                 </div>
               )}
@@ -240,15 +210,43 @@ export default function GamePage() {
               )}
             </div>
 
+            {/* Open pile and pick controls */}
+            {gameDetails?.gameState === 20 && (
+              <OpenPile open={openPile} canAct={canAct} onPickOpen={handlePickOpen} deckCount={deckCount} onPickClosed={handlePickClosed} />
+            )}
+
             {/* Player Cards */}
             <PlayerCards 
               cards={playerCards} 
               gameState={gameDetails?.gameState || 0} 
               onCardSelection={setSelectedCards}
-              showPlayButton={gameDetails?.gameState === 20 && 
-                             gameDetails.currentPlayer.toString() === (typeof window !== 'undefined' ? localStorage.getItem('userId') : null)}
+              showPlayButton={canAct}
               selectedCardsCount={selectedCards.length}
             />
+
+            {/* Drop action */}
+            {canAct && selectedCards.length > 0 && (
+              <div className="mt-4">
+                <button
+                  onClick={handleDrop}
+                  className="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                >
+                  Drop Selected ({selectedCards.length})
+                </button>
+              </div>
+            )}
+
+            {/* Round summary modal */}
+            {roundSummary && <RoundSummary data={roundSummary} />}
+
+            {/* Game end banner */}
+            {gameEnd && <GameEndBanner data={gameEnd} />}
+
+            {/* Error toast */}
+            {errorToast && <ErrorToast message={errorToast} />}
+
+            {/* Scoreboard */}
+            <Scoreboard scores={scores} eliminated={eliminated} currentPlayer={gameDetails?.currentPlayer} />
           </div>
         </div>
       </div>

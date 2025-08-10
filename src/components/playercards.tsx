@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { websocketService } from '@/services/websocket';
+import { areAllSameRank, getCardFilename } from '@/utils/cards';
 
 interface PlayerCardsProps {
   cards: string[];
@@ -11,26 +13,7 @@ interface PlayerCardsProps {
 const PlayerCards: React.FC<PlayerCardsProps> = ({ cards, gameState, onCardSelection, showPlayButton = false, selectedCardsCount = 0 }) => {
   const [selectedCards, setSelectedCards] = useState<Set<number>>(new Set());
 
-  // Convert card code to filename format (e.g., "11d" -> "JD.svg")
-  const getCardFilename = (cardCode: string) => {
-    const value = cardCode.slice(0, -1);
-    const suit = cardCode.slice(-1);
-    
-    // Convert value to card name
-    let cardValue = '';
-    switch (value) {
-      case '1': cardValue = 'A'; break;
-      case '11': cardValue = 'J'; break;
-      case '12': cardValue = 'Q'; break;
-      case '13': cardValue = 'K'; break;
-      default: cardValue = value;
-    }
-    
-    // Convert suit to uppercase
-    const cardSuit = suit.toUpperCase();
-    
-    return `${cardValue}${cardSuit}.svg`;
-  };
+  // use shared util for mapping
 
   const handleCardClick = (index: number) => {
     const newSelectedCards = new Set(selectedCards);
@@ -63,6 +46,14 @@ const PlayerCards: React.FC<PlayerCardsProps> = ({ cards, gameState, onCardSelec
         {showPlayButton && selectedCardsCount > 0 && (
           <button
             className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors font-medium shadow-lg"
+            onClick={() => {
+              const selectedCardCodes = Array.from(selectedCards).map(index => cards[index]);
+              if (!areAllSameRank(selectedCardCodes)) {
+                return;
+              }
+              websocketService.drop(selectedCardCodes);
+              setSelectedCards(new Set());
+            }}
           >
             Play Cards
           </button>
