@@ -91,8 +91,12 @@ class WebSocketService {
     const configured = process.env.NEXT_PUBLIC_WS_URL?.replace(/\/$/, '');
     if (configured) return `${configured}/ws?gameId=${gameId}`;
     if (typeof window !== 'undefined' && window.location) {
-      const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+      // If running on Vercel frontend domain, direct to backend WS host
       const host = window.location.host;
+      if (host.endsWith('vercel.app')) {
+        return `wss://leastcount.duckdns.org/ws?gameId=${gameId}`;
+      }
+      const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
       return `${protocol}://${host}/ws?gameId=${gameId}`;
     }
     // Fallback to deployed domain
