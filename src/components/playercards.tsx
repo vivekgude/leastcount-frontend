@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { websocketService } from '@/services/websocket';
 import { areAllSameRank, getCardFilename } from '@/utils/cards';
+import Image from 'next/image';
 
 interface PlayerCardsProps {
   cards: string[];
@@ -73,15 +74,18 @@ const PlayerCards: React.FC<PlayerCardsProps> = ({ cards, gameState, onCardSelec
               }`}
               onClick={() => handleCardClick(index)}
             >
-              <img
+              <Image
                 src={`/cards/${getCardFilename(card)}`}
                 alt={`Card ${card}`}
+                width={80}
+                height={112}
                 className="w-full h-full object-cover"
-                onError={(e) => {
-                  // Fallback to card code if image fails to load
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
-                  target.nextElementSibling?.classList.remove('hidden');
+                unoptimized
+                onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+                  const img = e.currentTarget;
+                  img.style.display = 'none';
+                  const sib = img.nextElementSibling as HTMLElement | null;
+                  sib?.classList.remove('hidden');
                 }}
               />
               <div className="hidden w-full h-full flex items-center justify-center text-sm font-bold text-gray-700">
