@@ -16,6 +16,36 @@ export function useGameSocket(gameId: string | undefined) {
   const [eliminated, setEliminated] = useState<number[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
+  function startOrStopTimerForTurn(currentPlayerId: number | undefined, moveEndTimeMs: number | undefined) {
+    if (typeof window === 'undefined') return;
+    const myId = localStorage.getItem('userId');
+    const isMyTurn = currentPlayerId !== undefined && myId !== null && currentPlayerId.toString() === myId;
+
+    // Clear any existing timer first
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+
+    if (isMyTurn && typeof moveEndTimeMs === 'number') {
+      const now = Date.now();
+      const remaining = Math.max(0, moveEndTimeMs - now);
+      setTimeRemaining(remaining);
+      timerRef.current = setInterval(() => {
+        const now2 = Date.now();
+        const remaining2 = Math.max(0, (moveEndTimeMs as number) - now2);
+        setTimeRemaining(remaining2);
+        if (remaining2 <= 0 && timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
+      }, 1000);
+    } else {
+      // Not my turn
+      setTimeRemaining(0);
+    }
+  }
+
   useEffect(() => {
     if (!gameId) return;
 
@@ -25,7 +55,10 @@ export function useGameSocket(gameId: string | undefined) {
 
     // Handlers
     const handleGameDetails = (details: GameDetails) => setGameDetails(details);
-    const handleGameStart = (response: GameStartResponse) => setGameDetails(prev => prev ? { ...prev, gameState: response.gameState, currentPlayer: response.currentPlayer, moveTime: response.moveTime } : null);
+    const handleGameStart = (response: GameStartResponse) => {
+      setGameDetails(prev => prev ? { ...prev, gameState: response.gameState, currentPlayer: response.currentPlayer, moveTime: response.moveTime } : null);
+      startOrStopTimerForTurn(response.currentPlayer, response.moveTime);
+    };
     const handleCards = (response: CardsResponse) => setPlayerCards(response.cards);
 
     websocketService.setGameDetailsHandler(handleGameDetails);
@@ -58,6 +91,16 @@ export function useGameSocket(gameId: string | undefined) {
         const arr = Object.entries(m.gameScores).map(([pid, total]) => ({ playerId: Number(pid), total: Number(total) }));
         setScores(arr);
       }
+      // Sync current player/move time and (re)start timer when it's our turn
+      setGameDetails(prev => {
+        if (!prev) return prev;
+        const next = { ...prev };
+        if (typeof m.currentPlayer === 'number') next.currentPlayer = m.currentPlayer;
+        if (typeof m.moveTime === 'number') next.moveTime = m.moveTime;
+        // Start/stop timer as appropriate
+        startOrStopTimerForTurn(next.currentPlayer, next.moveTime);
+        return next;
+      });
     };
     const onDropRes = (m: DropRes) => { setOpenPile(m.open); setDeckCount(m.deckCount); };
     const onPickRes = (m: PickRes) => { setOpenPile(m.open); };

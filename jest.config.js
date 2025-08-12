@@ -2,7 +2,7 @@
 module.exports = {
   testEnvironment: 'jest-environment-jsdom',
   transform: {
-    '^.+\\.(ts|tsx)$': ['ts-jest', { tsconfig: 'tsconfig.json' }],
+    '^.+\\.(ts|tsx)$': ['ts-jest', { tsconfig: { jsx: 'react-jsx', module: 'commonjs', esModuleInterop: true } }],
   },
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',

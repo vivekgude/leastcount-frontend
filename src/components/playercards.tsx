@@ -43,7 +43,7 @@ const PlayerCards: React.FC<PlayerCardsProps> = ({ cards, gameState, onCardSelec
   return (
     <div className="mt-6">
       <div className="flex justify-between items-center mb-3">
-        <h3 className="text-lg font-semibold text-gray-800">Your Cards</h3>
+        <h3 className="text-lg font-semibold text-gray-800" id="your-cards-heading">Your Cards</h3>
         {showPlayButton && selectedCardsCount > 0 && (
           <button
             className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors font-medium shadow-lg"
@@ -55,12 +55,13 @@ const PlayerCards: React.FC<PlayerCardsProps> = ({ cards, gameState, onCardSelec
               websocketService.drop(selectedCardCodes);
               setSelectedCards(new Set());
             }}
+            aria-label={`Play ${selectedCardsCount} selected card${selectedCardsCount !== 1 ? 's' : ''}`}
           >
             Play Cards
           </button>
         )}
       </div>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2" role="listbox" aria-labelledby="your-cards-heading" aria-multiselectable="true">
         {cards.map((card, index) => {
           const isSelected = selectedCards.has(index);
           
@@ -73,6 +74,10 @@ const PlayerCards: React.FC<PlayerCardsProps> = ({ cards, gameState, onCardSelec
                   : 'border-gray-300 hover:border-gray-400'
               }`}
               onClick={() => handleCardClick(index)}
+              role="option"
+              aria-selected={isSelected}
+              aria-label={`Card ${card}${isSelected ? ' selected' : ''}`}
+              tabIndex={0}
             >
               <Image
                 src={`/cards/${getCardFilename(card)}`}

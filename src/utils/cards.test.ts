@@ -1,4 +1,4 @@
-import { areAllSameRank, getCardFilename } from './cards';
+import { areAllSameRank, getCardFilename, extractRank } from './cards';
 
 describe('cards utils', () => {
   test('areAllSameRank returns true for same rank', () => {
@@ -14,6 +14,11 @@ describe('cards utils', () => {
     expect(getCardFilename('12c')).toBe('QC.svg');
     expect(getCardFilename('13h')).toBe('KH.svg');
     expect(getCardFilename('9s')).toBe('9S.svg');
+  });
+  test('extractRank returns numeric part', () => {
+    expect(extractRank('7h')).toBe('7');
+    expect(extractRank('10d')).toBe('10');
+    expect(extractRank('13s')).toBe('13');
   });
 });
 
