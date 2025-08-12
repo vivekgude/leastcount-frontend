@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import GamePage from '../game';
+import GamePage from '@/pages/game';
 import * as useGameSocketModule from '@/hooks/useGameSocket';
 import { useRouter } from 'next/router';
 
